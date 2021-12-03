@@ -19,7 +19,12 @@ class TestDwgMailParser(unittest.TestCase):
     def testBlockquote(self):
         self.assertHtmlBody(
             '<div style="border:none; border-left:solid blue 1.5pt; padding:0cm 0cm 0cm 4.0pt" type="cite">wat</div>',
-            '<blockquote>wat</blockquote>'
+            '<blockquote>wat</blockquote>\n'
+        )
+    def testHtmlBlock(self):
+        self.assertHtmlBody(
+            'here comes h3: <h3>header</h3>',
+            'here comes h3: \n<h3>header</h3>\n'
         )
     def assertHtmlBody(self,contents,expected):
         parser = DwgMailParser()
