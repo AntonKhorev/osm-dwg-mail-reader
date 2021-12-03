@@ -1,6 +1,7 @@
 import re
 import email
 import quopri
+from dwg_mail_parser import DwgMailParser
 
 class DwgMailReader:
     def readFromFile(self,fp):
@@ -33,10 +34,14 @@ class DwgMailReader:
         if not self.osm_user_names:
             raise Exception("To: header not parseable")
 
-        self.body=""
+        body=""
         for part in parsed.walk():
-            if part.get_content_type() == 'text/plain':
-                self.body = part.get_payload()
+            if part.get_content_type() == 'text/html':
+                body = part.get_payload()
                 match = re.findall("quoted", part.get("Content-Transfer-Encoding", ""))
                 if match:
-                    self.body = quopri.decodestring(self.body).decode("latin1")
+                    body = quopri.decodestring(body).decode("utf-8")
+        
+        body_parser = DwgMailParser()
+        body_parser.feed(body)
+        self.body = body_parser.body
