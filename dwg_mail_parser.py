@@ -1,3 +1,4 @@
+import re
 from html.parser import HTMLParser
 
 class DwgMailParser(HTMLParser):
@@ -31,8 +32,13 @@ class DwgMailParser(HTMLParser):
             else:
                 self.body += '</'+tag+'>'
     def handle_data(self, data):
+        ESCAPED_CHAR_RE = r'''(\$\$|[\\*_`\[\]\{"'|])|^[ ]{0,3}(:)'''
+        def kramdown_escape(matchobj):
+            return "\\" + (matchobj.group(1) or matchobj.group(2))
         if self.inBody:
-            self.body += data
+            space_collapsed_data = re.sub(r"\s+", ' ', data)
+            escaped_data = re.sub(ESCAPED_CHAR_RE, kramdown_escape, space_collapsed_data)
+            self.body += escaped_data
     def handle_entityref(self, name):
         if self.inBody:
             self.body += '&'+name+';'
