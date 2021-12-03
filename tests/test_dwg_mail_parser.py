@@ -9,22 +9,27 @@ from dwg_mail_parser import DwgMailParser
 
 class TestDwgMailParser(unittest.TestCase):
     def testEmptyBody(self):
-        self.assertHtmlBody("","")
-    def testAsterisk(self):
-        self.assertHtmlBody("* whatever","\\* whatever")
-    def testTwoAsterisks(self):
-        self.assertHtmlBody("* one\n* two","\\* one \\* two")
-    def testSpaces(self):
-        self.assertHtmlBody("    indent"," indent") 
+        self.assertHtmlBody("","<div>\n")
+    # def testAsterisk(self):
+    #     self.assertHtmlBody("* whatever","\\* whatever")
+    # def testTwoAsterisks(self):
+    #     self.assertHtmlBody("* one\n* two","\\* one \\* two")
+    # def testSpaces(self):
+    #     self.assertHtmlBody("    indent"," indent") 
     def testBlockquote(self):
         self.assertHtmlBody(
             '<div style="border:none; border-left:solid blue 1.5pt; padding:0cm 0cm 0cm 4.0pt" type="cite">wat</div>',
-            '<blockquote>wat</blockquote>\n'
+            '<div>\n<blockquote>wat</blockquote>'
         )
-    def testHtmlBlock(self):
+    # def testHtmlBlock(self):
+    #     self.assertHtmlBody(
+    #         'here comes h3: <h3>header</h3>',
+    #         'here comes h3: \n<h3>header</h3>\n'
+    #     )
+    def testBrokenClosingDiv(self):
         self.assertHtmlBody(
-            'here comes h3: <h3>header</h3>',
-            'here comes h3: \n<h3>header</h3>\n'
+            '</div>\n- haha\n- owned',
+            ''
         )
     def assertHtmlBody(self,contents,expected):
         parser = DwgMailParser()
