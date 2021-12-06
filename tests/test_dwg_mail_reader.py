@@ -21,6 +21,7 @@ def make_mail(From, To, Subject, plain, html):
     html_message = email.mime.text.MIMEText(html, 'html')
     message.attach(plain_message)
     message.attach(html_message)
+    # print(str(message))
     return message
 
 def read_mail(From, To, Subject, plain, html):
@@ -68,4 +69,19 @@ class TestDwgMailReader(unittest.TestCase):
                 <li>three
                 </ul>
                 </div>
+        '''))
+    def testCyrillicUtf8Base64(self):
+        mail = read_mail(
+            'Data Working Group <data@otrs.openstreetmap.org>',
+            'Some Username <fwd@dwgmail.info>',
+            'Re: [Ticket#2021112500000000] Issue #11111 (User "Other Username")',
+            'русский',
+            wrap_html('<p>русский</p>')
+        )
+        self.assertEqual(mail.osm_user_names, ['Some Username'])
+        self.assertEqual(mail.subject, 'Re: [Ticket#2021112500000000] Issue #11111 (User "Other Username")')
+        self.assertEqual(mail.body, textwrap.dedent('''\
+            <div>
+            <p>русский</p>
+            </div>
         '''))
