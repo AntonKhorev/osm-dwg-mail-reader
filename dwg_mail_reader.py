@@ -40,7 +40,10 @@ class DwgMailReader:
                 body = part.get_payload()
                 match = re.findall("quoted", part.get("Content-Transfer-Encoding", ""))
                 if match:
-                    body = quopri.decodestring(body).decode("utf-8")
+                    charset = part.get_content_charset()
+                    if not charset:
+                        charset = "utf-8"
+                    body = quopri.decodestring(body).decode(charset)
         
         body_parser = DwgMailParser()
         body_parser.feed(body)
