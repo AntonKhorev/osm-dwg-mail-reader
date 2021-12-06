@@ -1,12 +1,11 @@
 from html.parser import HTMLParser
 
-class DwgMailParser(HTMLParser):
+class _DwgMailParser(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=False)
         self.body = ""
         self.in_body = False
         self.div_stack = []
-        self.started_output = False
     def handle_startendtag(self, tag, attrs):
         if self.in_body:
             self.body += self.get_starttag_text()
@@ -23,9 +22,6 @@ class DwgMailParser(HTMLParser):
             self.body += self.get_starttag_text()
         if tag == 'body':
             self.in_body = True
-            if not self.started_output:
-                self.started_output = True
-                self.body += '<div>\n' # trigger html mode until the end of the document, don't need to balance this tag
     def handle_endtag(self, tag):
         if tag == 'body':
             self.in_body = False
@@ -43,3 +39,21 @@ class DwgMailParser(HTMLParser):
     def handle_charref(self, name):
         if self.in_body:
             self.body += '&#'+name+';'
+
+class DwgMailParser(HTMLParser):
+    def __init__(self):
+        self.parser = _DwgMailParser()
+    def feed(self,data):
+        self.parser.feed(data)
+    @property
+    def body(self):
+        if len(self.parser.body) <= 0:
+            return ''
+        result = '<div>' # trigger html mode in kramdown
+        if self.parser.body[0] != '\n':
+            result += '\n'
+        result += self.parser.body
+        if self.parser.body[-1] != '\n':
+            result += '\n'
+        result += '</div>\n'
+        return result
