@@ -1,6 +1,5 @@
 import re
 import email
-import quopri
 from dwg_mail_parser import DwgMailParser
 
 class DwgMailReader:
@@ -37,13 +36,10 @@ class DwgMailReader:
         body=""
         for part in parsed.walk():
             if part.get_content_type() == 'text/html':
-                body = part.get_payload()
-                match = re.findall("quoted", part.get("Content-Transfer-Encoding", ""))
-                if match:
-                    charset = part.get_content_charset()
-                    if not charset:
-                        charset = "utf-8"
-                    body = quopri.decodestring(body).decode(charset)
+                charset = part.get_content_charset()
+                if not charset:
+                    charset = "utf-8"
+                body = part.get_payload(decode=True).decode(charset)
         
         body_parser = DwgMailParser()
         body_parser.feed(body)
