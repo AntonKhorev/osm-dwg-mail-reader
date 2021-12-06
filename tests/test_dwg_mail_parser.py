@@ -7,6 +7,9 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from dwg_mail_parser import DwgMailParser
 
+def wrap_html(contents):
+    return '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/></head><body>'+contents+'</body></html>'
+
 class TestDwgMailParser(unittest.TestCase):
     def testEmptyBody(self):
         self.assertHtmlBody("","")
@@ -35,7 +38,5 @@ class TestDwgMailParser(unittest.TestCase):
         )
     def assertHtmlBody(self,contents,expected):
         parser = DwgMailParser()
-        parser.feed(self.wrapHtml(contents))
+        parser.feed(wrap_html(contents))
         self.assertEqual(parser.body, expected)
-    def wrapHtml(self,contents):
-        return '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/></head><body>'+contents+'</body></html>'

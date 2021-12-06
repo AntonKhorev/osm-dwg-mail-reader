@@ -3,7 +3,7 @@ import email
 from dwg_mail_parser import DwgMailParser
 
 class DwgMailReader:
-    def read_from_file(self,fp):
+    def read_from_file(self, fp):
         message = email.message_from_file(fp)
         to_header = ''
         for s,e in email.header.decode_header(message.get('To')):
