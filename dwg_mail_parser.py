@@ -26,8 +26,9 @@ class _DwgMailParser(HTMLParser):
         if tag == 'body':
             self.in_body = False
         if self.in_body:
-            if tag == 'div' and len(self.div_stack) > 0:
-                self.body += '</'+self.div_stack.pop()+'>'
+            if tag == 'div':
+                if len(self.div_stack) > 0: # make sure there aren't more closing divs than opening divs because need everything inside wrapper div
+                    self.body += '</'+self.div_stack.pop()+'>'
             else:
                 self.body += '</'+tag+'>'
     def handle_data(self, data):
