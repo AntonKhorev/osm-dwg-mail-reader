@@ -9,7 +9,7 @@ To read an email fed from stdin:
 ```python
 from dwg_mail_reader import DwgMailReader
 mail = DwgMailReader()
-mail.readFromFile(sys.stdin)
+mail.read_from_file(sys.stdin)
 ```
 
 After that you'll have access to the following properties:

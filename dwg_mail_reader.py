@@ -3,10 +3,10 @@ import email
 from dwg_mail_parser import DwgMailParser
 
 class DwgMailReader:
-    def readFromFile(self,fp):
-        parsed = email.message_from_file(fp)
+    def read_from_file(self,fp):
+        message = email.message_from_file(fp)
         to_header = ''
-        for s,e in email.header.decode_header(parsed.get('To')):
+        for s,e in email.header.decode_header(message.get('To')):
             if isinstance(s, str):
                 to_header += s
             elif e:
@@ -15,7 +15,7 @@ class DwgMailReader:
                 to_header += s.decode('ASCII')
 
         self.subject = ''
-        for s,e in email.header.decode_header(parsed.get('Subject')):
+        for s,e in email.header.decode_header(message.get('Subject')):
             if isinstance(s, str):
                 self.subject += s
             elif e:
@@ -34,7 +34,7 @@ class DwgMailReader:
             raise Exception("To: header not parseable")
 
         body=""
-        for part in parsed.walk():
+        for part in message.walk():
             if part.get_content_type() == 'text/html':
                 charset = part.get_content_charset()
                 if not charset:
