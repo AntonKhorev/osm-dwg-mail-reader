@@ -1,6 +1,7 @@
 import unittest
 import textwrap
 import io
+import quopri
 import email.mime.multipart
 import email.mime.text
 
@@ -11,14 +12,27 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from dwg_mail_reader import DwgMailReader
 
+def make_quopri_message(text, subtype='plain', charset='utf-8'):
+    message = email.mime.text.MIMEText('', subtype, charset)
+    message.set_payload(quopri.encodestring(text.encode(charset)))
+    del message['Content-Transfer-Encoding']
+    message['Content-Transfer-Encoding'] = 'quoted-printable'
+    return message
+
 def make_mail(From, To, Subject, plain, html):
     # message = email.mime.multipart.MIMEMultipart(boundary='multipartboundary')
     message = email.mime.multipart.MIMEMultipart()
     message['From'] = From
     message['To'] = To
     message['Subject'] = Subject
-    plain_message = email.mime.text.MIMEText(plain)
-    html_message = email.mime.text.MIMEText(html, 'html')
+    if isinstance(plain, str):
+        plain_message = email.mime.text.MIMEText(plain)
+    else:
+        plain_message = plain
+    if isinstance(html, str):
+        html_message = email.mime.text.MIMEText(html, 'html')
+    else:
+        html_message = html
     message.attach(plain_message)
     message.attach(html_message)
     # print(str(message))
@@ -83,5 +97,26 @@ class TestDwgMailReader(unittest.TestCase):
         self.assertEqual(mail.body, textwrap.dedent('''\
             <div>
             <p>русский</p>
+            </div>
+        '''))
+    def testCyrillicUtf8Quopri(self):
+        plain_message = email.mime.text.MIMEText('','plain','utf-8')
+        plain_message.set_payload(quopri.encodestring(
+            '*русский* language'.encode('utf-8')
+        ))
+        del plain_message['Content-Transfer-Encoding']
+        plain_message['Content-Transfer-Encoding']='quoted-printable'
+        mail = read_mail(
+            'Data Working Group <data@otrs.openstreetmap.org>',
+            'Some Username <fwd@dwgmail.info>',
+            'Re: [Ticket#2021112500000000] Issue #11111 (User "Other Username")',
+            make_quopri_message('*русский* language'),
+            make_quopri_message(wrap_html('<p><em>русский</em> language</p>'),'html')
+        )
+        self.assertEqual(mail.osm_user_names, ['Some Username'])
+        self.assertEqual(mail.subject, 'Re: [Ticket#2021112500000000] Issue #11111 (User "Other Username")')
+        self.assertEqual(mail.body, textwrap.dedent('''\
+            <div>
+            <p><em>русский</em> language</p>
             </div>
         '''))
