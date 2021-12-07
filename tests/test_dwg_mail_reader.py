@@ -120,3 +120,21 @@ class TestDwgMailReader(unittest.TestCase):
             <p><em>русский</em> language</p>
             </div>
         '''))
+    def testCyrillicHeaders(self):
+        mail = read_mail(
+            'Data Working Group <data@otrs.openstreetmap.org>',
+            'Вася <fwd@dwgmail.info>',
+            'Re: [Ticket#2021112500000000] Issue #11111 (User "Петя")',
+            'OK',
+            wrap_html('<p>OK</p>')
+        )
+        self.assertEqual(mail.osm_user_names, ['Вася'])
+        self.assertEqual(mail.subject, 'Re: [Ticket#2021112500000000] Issue #11111 (User "Петя")')
+        self.assertEqual(mail.body, textwrap.dedent('''\
+            <div>
+            <p>OK</p>
+            </div>
+        '''))
+
+if __name__ == "__main__":
+    unittest.main()

@@ -40,3 +40,6 @@ class TestDwgMailParser(unittest.TestCase):
         parser = DwgMailParser()
         parser.feed(wrap_html(contents))
         self.assertEqual(parser.body, expected)
+
+if __name__ == "__main__":
+    unittest.main()
