@@ -4,6 +4,7 @@ import io
 import quopri
 import email.mime.multipart
 import email.mime.text
+import email.policy
 
 # https://stackoverflow.com/a/11158224
 import os
@@ -21,16 +22,16 @@ def make_quopri_message(text, subtype='plain', charset='utf-8'):
 
 def make_mail(From, To, Subject, plain, html):
     # message = email.mime.multipart.MIMEMultipart(boundary='multipartboundary')
-    message = email.mime.multipart.MIMEMultipart()
+    message = email.mime.multipart.MIMEMultipart(policy=email.policy.default)
     message['From'] = From
     message['To'] = To
     message['Subject'] = Subject
     if isinstance(plain, str):
-        plain_message = email.mime.text.MIMEText(plain)
+        plain_message = email.mime.text.MIMEText(plain, policy=email.policy.default)
     else:
         plain_message = plain
     if isinstance(html, str):
-        html_message = email.mime.text.MIMEText(html, 'html')
+        html_message = email.mime.text.MIMEText(html, 'html', policy=email.policy.default)
     else:
         html_message = html
     message.attach(plain_message)
@@ -83,6 +84,21 @@ class TestDwgMailReader(unittest.TestCase):
                 <li>three
                 </ul>
                 </div>
+        '''))
+    def testMultipleTos(self):
+        mail = read_mail(
+            'Data Working Group <data@otrs.openstreetmap.org>',
+            'Fred <fwd@dwgmail.info>, John <fwd@dwgmail.info>',
+            'Re: [Ticket#2021112500000000] Issue #11111',
+            'OK',
+            wrap_html('<p>OK</p>')
+        )
+        self.assertEqual(mail.osm_user_names, ['Fred','John'])
+        self.assertEqual(mail.subject, 'Re: [Ticket#2021112500000000] Issue #11111')
+        self.assertEqual(mail.body, textwrap.dedent('''\
+            <div>
+            <p>OK</p>
+            </div>
         '''))
     def testCyrillicUtf8Base64(self):
         mail = read_mail(
