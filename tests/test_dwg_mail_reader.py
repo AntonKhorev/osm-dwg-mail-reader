@@ -5,6 +5,7 @@ import quopri
 import email.mime.multipart
 import email.mime.text
 import email.policy
+import email.headerregistry
 
 # https://stackoverflow.com/a/11158224
 import os
@@ -12,6 +13,8 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 from dwg_mail_reader import DwgMailReader
+
+# osm usernames can contain anything but these chars /;.,?%#
 
 def make_quopri_message(text, subtype='plain', charset='utf-8'):
     message = email.mime.text.MIMEText('', subtype, charset)
@@ -23,9 +26,9 @@ def make_quopri_message(text, subtype='plain', charset='utf-8'):
 def make_mail(From, To, Subject, plain, html):
     # message = email.mime.multipart.MIMEMultipart(boundary='multipartboundary')
     message = email.mime.multipart.MIMEMultipart(policy=email.policy.default)
-    message['From'] = From
-    message['To'] = To
-    message['Subject'] = Subject
+    if From: message['From'] = From
+    if To: message['To'] = To
+    if Subject: message['Subject'] = Subject
     if isinstance(plain, str):
         plain_message = email.mime.text.MIMEText(plain, policy=email.policy.default)
     else:
@@ -100,11 +103,26 @@ class TestDwgMailReader(unittest.TestCase):
             <p>OK</p>
             </div>
         '''))
+    def testToWithAngleBrackets(self):
+        mail = read_mail(
+            'Data Working Group <data@otrs.openstreetmap.org>',
+            email.headerregistry.Address('LOL <owned>', 'fwd', 'dwgmail.info'),
+            'Re: [Ticket#2021112500000000] Issue #11111',
+            'OK',
+            wrap_html('<p>OK</p>')
+        )
+        self.assertEqual(mail.osm_user_names, ['LOL <owned>'])
+        self.assertEqual(mail.subject, 'Re: [Ticket#2021112500000000] Issue #11111')
+        self.assertEqual(mail.body, textwrap.dedent('''\
+            <div>
+            <p>OK</p>
+            </div>
+        '''))
     def testCyrillicUtf8Base64(self):
         mail = read_mail(
             'Data Working Group <data@otrs.openstreetmap.org>',
             'Some Username <fwd@dwgmail.info>',
-            'Re: [Ticket#2021112500000000] Issue #11111 (User "Other Username")',
+            'Re: [Ticket#2021112500000000] Issue #11111',
             'русский',
             wrap_html('<p>русский</p>')
         )
@@ -146,6 +164,51 @@ class TestDwgMailReader(unittest.TestCase):
         )
         self.assertEqual(mail.osm_user_names, ['Вася'])
         self.assertEqual(mail.subject, 'Re: [Ticket#2021112500000000] Issue #11111 (User "Петя")')
+        self.assertEqual(mail.body, textwrap.dedent('''\
+            <div>
+            <p>OK</p>
+            </div>
+        '''))
+    def testAccentedHeaders(self):
+        mail = read_mail(
+            'Data Working Group <data@otrs.openstreetmap.org>',
+            'Iváns <fwd@dwgmail.info>',
+            'Re: [Ticket#2021112500000000] Issue #11111',
+            'OK',
+            wrap_html('<p>OK</p>')
+        )
+        self.assertEqual(mail.osm_user_names, ['Iváns'])
+        self.assertEqual(mail.subject, 'Re: [Ticket#2021112500000000] Issue #11111')
+        self.assertEqual(mail.body, textwrap.dedent('''\
+            <div>
+            <p>OK</p>
+            </div>
+        '''))
+    # def testMissingTo(self):
+    #     mail = read_mail(
+    #         'Data Working Group <data@otrs.openstreetmap.org>',
+    #         None,
+    #         'Re: [Ticket#2021112500000000] Issue #11111',
+    #         'OK',
+    #         wrap_html('<p>OK</p>')
+    #     )
+    #     self.assertEqual(mail.osm_user_names, [])
+    #     self.assertEqual(mail.subject, 'Re: [Ticket#2021112500000000] Issue #11111')
+    #     self.assertEqual(mail.body, textwrap.dedent('''\
+    #         <div>
+    #         <p>OK</p>
+    #         </div>
+    #     '''))
+    def testMissingSubject(self):
+        mail = read_mail(
+            'Data Working Group <data@otrs.openstreetmap.org>',
+            'Some Username <fwd@dwgmail.info>',
+            None,
+            'OK',
+            wrap_html('<p>OK</p>')
+        )
+        self.assertEqual(mail.osm_user_names, ['Some Username'])
+        # self.assertEqual(mail.subject, '')
         self.assertEqual(mail.body, textwrap.dedent('''\
             <div>
             <p>OK</p>
