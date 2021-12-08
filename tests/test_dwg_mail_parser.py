@@ -36,6 +36,15 @@ class TestDwgMailParser(unittest.TestCase):
             '</div>\n- haha\n- owned',
             '<div>\n- haha\n- owned\n</div>\n'
         )
+    def testNoBody(self):
+        self.assertHtml(
+            '<p>no body element</p>',
+            '<div>\n<p>no body element</p>\n</div>\n',
+        )
+    def assertHtml(self,contents,expected):
+        parser = DwgMailParser()
+        parser.feed(contents)
+        self.assertEqual(parser.body, expected)
     def assertHtmlBody(self,contents,expected):
         parser = DwgMailParser()
         parser.feed(wrap_html(contents))
